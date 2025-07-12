@@ -1,0 +1,49 @@
+{
+  "trainColors": {
+    "colorMapping": {
+      "e1": { "color": "#FF0000", "name": "Rojo", "rgb": [255, 0, 0] },
+      "e2": { "color": "#00FF00", "name": "Verde", "rgb": [0, 255, 0] },
+      "e3": { "color": "#0000FF", "name": "Azul", "rgb": [0, 0, 255] },
+      "e4": { "color": "#FFFF00", "name": "Amarillo", "rgb": [255, 255, 0] },
+      "e5": { "color": "#FF00FF", "name": "Magenta", "rgb": [255, 0, 255] },
+      "e6": { "color": "#00FFFF", "name": "Cian", "rgb": [0, 255, 255] },
+      "e7": { "color": "#FFA500", "name": "Naranja", "rgb": [255, 165, 0] },
+      "e8": { "color": "#800080", "name": "Púrpura", "rgb": [128, 0, 128] },
+      "e9": { "color": "#FFC0CB", "name": "Rosa", "rgb": [255, 192, 203] },
+      "e10": { "color": "#A52A2A", "name": "Marrón", "rgb": [165, 42, 42] },
+      "e11": { "color": "#808080", "name": "Gris", "rgb": [128, 128, 128] },
+      "e12": { "color": "#333333", "name": "Negro", "rgb": [51, 51, 51] },
+      "e13": { "color": "#F0F0F0", "name": "Blanco", "rgb": [240, 240, 240] },
+      "e14": { "color": "#40E0D0", "name": "Turquesa", "rgb": [64, 224, 208] }
+    },
+    "trainDesign": {
+      "trainLength": 40,
+      "trainWidth": 20,
+      "shape": "circle",
+      "radius": 8,
+      "border": {
+        "width": 2,
+        "color": "#FFFFFF"
+      },
+      "highlight": {
+        "enabled": true,
+        "color": "#FFFFFF",
+        "opacity": 0.3
+      }
+    },
+    "stationColors": {
+      "useTrainColors": true,
+      "highlightDestination": true,
+      "highlightColor": "#FFD700",
+      "highlightOpacity": 0.7
+    },
+    "colorContrast": {
+      "ensureReadability": true,
+      "minContrast": 3.0,
+      "alternativeColors": {
+        "e12": "#333333",
+        "e13": "#F0F0F0"
+      }
+    }
+  }
+}

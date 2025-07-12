@@ -1,0 +1,79 @@
+{
+  "gameConfig": {
+    "trainSpawning": {
+      "startStation": "e0",
+      "destinations": ["e1", "e2", "e3", "e4", "e5", "e6", "e7", "e8", "e9", "e10", "e11", "e12", "e13", "e14"],
+      "spawnInterval": {
+        "easy": 5000,
+        "medium": 3000,
+        "hard": 2000
+      },
+      "trainSpeed": {
+        "easy": 1,
+        "medium": 2,
+        "hard": 3
+      },
+      "maxTrainsOnTrack": {
+        "easy": 3,
+        "medium": 5,
+        "hard": 8
+      }
+    },
+    "difficulty": {
+      "levels": ["easy", "medium", "hard"],
+      "default": "medium",
+      "descriptions": {
+        "easy": "Trenes lentos, pocos trenes, más tiempo para pensar",
+        "medium": "Velocidad normal, dificultad equilibrada", 
+        "hard": "Trenes rápidos, muchos trenes, decisiones rápidas"
+      }
+    },
+    "scoring": {
+      "correctDelivery": 100,
+      "wrongDelivery": -50,
+      "timeBonus": 10,
+      "switchPenalty": -5,
+      "collisionPenalty": -200
+    },
+    "controls": {
+      "platform": "desktop",
+      "input": {
+        "mouse": {
+          "click": "toggle_switch",
+          "hover": "show_info"
+        },
+        "touch": {
+          "tap": "toggle_switch",
+          "hold": "show_info"
+        }
+      }
+    },
+    "gameStates": {
+      "switches": {
+        "c1s": "A",
+        "c2s": "B",
+        "c3s": "B",
+        "c4s": "H",
+        "c5s": "G",
+        "c6s": "G",
+        "c7s": "F",
+        "c8s": "A",
+        "c9s": "F",
+        "c10s": "F",
+        "c11s": "D",
+        "c12s": "B",
+        "c13s": "H"
+      },
+      "autoSave": true,
+      "pauseOnLostFocus": true,
+      "showTutorial": true
+    },
+    "visual": {
+      "showLabels": true,
+      "showConnectionPoints": false,
+      "showTrackLines": false,
+      "animationSpeed": 1.0,
+      "theme": "default"
+    }
+  }
+}

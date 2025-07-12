@@ -1,0 +1,75 @@
+{
+  "trackIcons": {
+    "--": {
+      "name": "Recto Horizontal",
+      "description": "Oeste ↔ Este",
+      "path": "M 0 80 L 160 80",
+      "connectionPoints": [
+        {"x": 0, "y": 80, "direction": "west"},
+        {"x": 160, "y": 80, "direction": "east"}
+      ]
+    },
+    "|": {
+      "name": "Recto Vertical", 
+      "description": "Norte ↔ Sur",
+      "path": "M 80 0 L 80 160",
+      "connectionPoints": [
+        {"x": 80, "y": 0, "direction": "north"},
+        {"x": 80, "y": 160, "direction": "south"}
+      ]
+    },
+    "D-N": {
+      "name": "Curva Derecha-Norte",
+      "description": "Derecha ↔ Norte",
+      "path": "M 80 0 L 80 40 Q 80 80 120 80 L 160 80",
+      "connectionPoints": [
+        {"x": 80, "y": 0, "direction": "north"},
+        {"x": 160, "y": 80, "direction": "east"}
+      ]
+    },
+    "D-S": {
+      "name": "Curva Derecha-Sur",
+      "description": "Derecha ↔ Sur", 
+      "path": "M 160 80 L 120 80 Q 80 80 80 120 L 80 160",
+      "connectionPoints": [
+        {"x": 160, "y": 80, "direction": "east"},
+        {"x": 80, "y": 160, "direction": "south"}
+      ]
+    },
+    "S-I": {
+      "name": "Curva Sur-Izquierda",
+      "description": "Sur ↔ Izquierda",
+      "path": "M 80 160 L 80 120 Q 80 80 40 80 L 0 80", 
+      "connectionPoints": [
+        {"x": 80, "y": 160, "direction": "south"},
+        {"x": 0, "y": 80, "direction": "west"}
+      ]
+    },
+    "I-N": {
+      "name": "Curva Izquierda-Norte",
+      "description": "Izquierda ↔ Norte",
+      "path": "M 0 80 L 40 80 Q 80 80 80 40 L 80 0",
+      "connectionPoints": [
+        {"x": 0, "y": 80, "direction": "west"},
+        {"x": 80, "y": 0, "direction": "north"}
+      ]
+    }
+  },
+  "styling": {
+    "circleRadius": 80,
+    "viewBox": "0 0 160 160",
+    "strokeWidth": 8,
+    "strokeLinecap": "round",
+    "trackColor": "#333",
+    "connectionPointRadius": 6,
+    "connectionPointColor": "#FF5722",
+    "backgroundColors": {
+      "straight": "#4CAF50",
+      "curve": "#2196F3"
+    },
+    "borderColors": {
+      "straight": "#2E7D32", 
+      "curve": "#1565C0"
+    }
+  }
+}

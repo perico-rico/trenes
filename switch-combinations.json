@@ -1,0 +1,59 @@
+{
+  "switchCombinations": {
+    "A": {
+      "states": ["--", "D-N"],
+      "switches": ["c1", "c8"],
+      "description": "Recto Horizontal / Curva Derecha-Norte"
+    },
+    "B": {
+      "states": ["--", "D-S"],
+      "switches": ["c2", "c3", "c12"],
+      "description": "Recto Horizontal / Curva Derecha-Sur"
+    },
+    "C": {
+      "states": ["--", "S-I"],
+      "switches": [],
+      "description": "Recto Horizontal / Curva Sur-Izquierda"
+    },
+    "D": {
+      "states": ["--", "I-N"],
+      "switches": ["c11"],
+      "description": "Recto Horizontal / Curva Izquierda-Norte"
+    },
+    "E": {
+      "states": ["|", "D-N"],
+      "switches": [],
+      "description": "Recto Vertical / Curva Derecha-Norte"
+    },
+    "F": {
+      "states": ["|", "D-S"],
+      "switches": ["c9", "c10", "c7"],
+      "description": "Recto Vertical / Curva Derecha-Sur"
+    },
+    "G": {
+      "states": ["|", "S-I"],
+      "switches": ["c6", "c5"],
+      "description": "Recto Vertical / Curva Sur-Izquierda"
+    },
+    "H": {
+      "states": ["|", "I-N"],
+      "switches": ["c13", "c4"],
+      "description": "Recto Vertical / Curva Izquierda-Norte"
+    }
+  },
+  "switchMapping": {
+    "c1": "A",
+    "c2": "B", 
+    "c3": "B",
+    "c4": "H",
+    "c5": "G",
+    "c6": "G",
+    "c7": "F",
+    "c8": "A",
+    "c9": "F",
+    "c10": "F",
+    "c11": "D",
+    "c12": "B",
+    "c13": "H"
+  }
+}
