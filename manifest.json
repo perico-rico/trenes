@@ -2,7 +2,7 @@
   "name": "Juego de Trenes",
   "short_name": "Trenes",
   "description": "Juego de switches de trenes",
-  "start_url": "/31.html",
+  "start_url": "/trenes/",
   "display": "standalone",
   "orientation": "landscape",
   "background_color": "#ffffff",
