@@ -4,7 +4,7 @@
   "description": "Juego de switches de trenes",
   "start_url": "/trenes/",
   "display": "standalone",
-  "orientation": "landscape",
+  "orientation": "portrait",
   "background_color": "#ffffff",
   "theme_color": "#4CAF50",
   "icons": [
