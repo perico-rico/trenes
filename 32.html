@@ -1,0 +1,1370 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Juego de Trenes - Auto Spawn</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f0f0;
+            overflow: hidden; /* Eliminar scroll */
+            height: 100vh; /* Altura completa pantalla */
+        }
+        
+        .container {
+            width: 100%;
+            height: 100vh;
+            background: white;
+            position: relative;
+        }
+        
+        .game-controls {
+            position: absolute;
+            top: 10px;
+            left: 0;
+            width: 1200px;
+            height: 80px;
+            display: flex;
+            z-index: 10;
+            background: rgba(255, 255, 255, 0.9);
+            border-bottom: 2px solid #333;
+        }
+        
+        .btn-play {
+            width: 80px;
+            height: 80px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .btn-play:hover {
+            background: #45a049;
+        }
+        
+        .btn-reset {
+            width: 80px;
+            height: 80px;
+            background: #f44336;
+            color: white;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .btn-reset:hover {
+            background: #d32f2f;
+        }
+        
+        .btn-reset:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .timer-display {
+            width: 300px;
+            height: 80px;
+            background: #2196F3;
+            color: white;
+            border: none;
+            font-size: 18px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        
+        .timer-display:hover {
+            background: #1976D2;
+        }
+        
+        .timer-display:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .score-display {
+            width: 500px;
+            height: 80px;
+            background: #FF9800;
+            color: white;
+            border: none;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 20px;
+            font-weight: bold;
+        }
+        
+        .difficulty-display {
+            width: 160px;
+            height: 80px;
+            background: #9C27B0;
+            color: white;
+            border: none;
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        
+        .difficulty-display:hover {
+            background: #7B1FA2;
+        }
+        
+        .difficulty-display:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .canvas-container {
+            position: absolute;
+            top: 90px; /* Debajo de los controles */
+            left: 0;
+            border: none;
+        }
+        
+        canvas {
+            display: block;
+        }
+        
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        
+        button:hover {
+            background: #45a049;
+        }
+        
+        button.stop {
+            background: #f44336;
+        }
+        
+        button.stop:hover {
+            background: #d32f2f;
+        }
+        
+        button:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .status {
+            margin-left: 15px;
+            font-weight: bold;
+            color: #666;
+        }
+        
+        .loading {
+            color: #2196F3;
+        }
+        
+        .error {
+            color: #f44336;
+        }
+        
+        .success {
+            color: #4CAF50;
+        }
+        
+        .game-info {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f9f9f9;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+        
+        .switch-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .switch-item {
+            background: white;
+            padding: 8px;
+            border-radius: 3px;
+            border: 1px solid #ccc;
+            font-size: 12px;
+        }
+        
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        .loading-content {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="game-controls">
+            <button class="btn-play" id="playPauseBtn" onclick="togglePlayPause()">▶</button>
+            <button class="btn-reset" id="resetBtn" onclick="resetGame()" disabled>R</button>
+            <button class="timer-display" id="timerBtn" onclick="toggleTimer()">60s</button>
+            <div class="score-display" id="scoreDisplay">CORRECTO   0 de 0</div>
+            <button class="difficulty-display" id="difficultyBtn" onclick="toggleDifficulty()">10s</button>
+        </div>
+        
+        <div class="canvas-container">
+            <canvas id="gameCanvas" width="1200" height="1833"></canvas>
+        </div>
+    </div>
+    
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay" style="display: none;">
+        <div class="loading-content">
+            <div class="spinner"></div>
+            <h3>Cargando datos del juego...</h3>
+            <p id="loadingText">Preparando archivos...</p>
+        </div>
+    </div>
+
+    <script>
+        // Variables globales
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const statusDiv = document.getElementById('status');
+        const switchInfoDiv = document.getElementById('switchInfo');
+        const gameInfoDiv = document.getElementById('gameInfo');
+        const startBtn = document.getElementById('startBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const spawnOneBtn = document.getElementById('spawnOneBtn');
+        const pauseBtn = document.getElementById('pauseBtn');
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        const loadingText = document.getElementById('loadingText');
+        
+        let gameImage = null;
+        let gameActive = false;
+        let gamePaused = false;
+        let animationId = null;
+		// Nuevas variables de estado del juego
+		let gameState = 0; // 0=no empezó, 1=jugando  ← AQUÍ ESTÁ
+		let gameTime = 60; // 60,90,120,150,180 segundos
+		let spawnInterval = 10; // 3-15 segundos entre trenes
+		let correctTrains = 0; // Trenes en estación correcta
+		let totalTrains = 0; // Total de trenes enviados
+		let gameTimer = null; // Timer de cuenta atrás
+		let currentGameTime = 60; // Tiempo actual de juego      
+     
+        // Sistema de trenes
+        let trains = [];
+        let trainIdCounter = 0;
+        
+        // Auto spawn
+        let autoSpawnTimer = null;
+        let autoSpawnEnabled = false;
+        
+        // Datos cargados desde JSON
+        let trackIcons = {};
+        let switchCombinations = {};
+        let gameMap = {};
+        let gameConfig = {};
+        let trainColors = {};
+        
+        // Estados de switches
+        let switchStatus = {};
+        let switchStates = {};
+        
+        // Sistema de animación
+        function gameLoop() {
+            if (!gameActive || gamePaused) return;
+            
+            trains.forEach(train => train.update());
+            drawGame();
+            animationId = requestAnimationFrame(gameLoop);
+        }
+        
+        function togglePlayPause() {
+            if (gameState === 0) {
+                // Iniciar juego por primera vez
+                startGame();
+            } else {
+                // Toggle pause/resume
+                if (gamePaused) {
+                    resumeGame();
+                } else {
+                    pauseGame();
+                }
+            }
+        }
+        
+        function startGame() {
+            if (!gameActive) {
+                initializeGame().then(() => {
+                    gameState = 1;
+                    gamePaused = false;
+                    currentGameTime = gameTime;
+                    
+                    playPauseBtn.textContent = '⏸';
+                    resetBtn.disabled = false;
+                    timerBtn.disabled = true;
+                    difficultyBtn.disabled = true;
+                    
+                    startAutoSpawn();
+                    startGameTimer();
+                });
+            } else {
+                gameState = 1;
+                gamePaused = false;
+                playPauseBtn.textContent = '⏸';
+                resetBtn.disabled = false;
+                startAutoSpawn();
+                startGameTimer();
+            }
+        }
+        
+        function pauseGame() {
+            gamePaused = true;
+            playPauseBtn.textContent = '▶';
+            resetBtn.disabled = false;
+            stopAutoSpawn();
+            stopGameTimer();
+        }
+        
+        function resumeGame() {
+            gamePaused = false;
+            playPauseBtn.textContent = '⏸';
+            resetBtn.disabled = false;
+            startAutoSpawn();
+            startGameTimer();
+        }
+        
+        function resetGame() {
+            // Confirmar reset
+            if (confirm('¿Resetear el juego? Se perderá el progreso actual.')) {
+                gameState = 0;
+                gameActive = false;
+                gamePaused = false;
+                currentGameTime = gameTime;
+                correctTrains = 0;
+                totalTrains = 0;
+                trains = [];
+                trainIdCounter = 0;
+                
+                playPauseBtn.textContent = '▶';
+                resetBtn.disabled = true;
+                timerBtn.disabled = false;
+                difficultyBtn.disabled = false;
+                
+                stopAutoSpawn();
+                stopGameTimer();
+                updateScoreDisplay();
+                updateTimerDisplay();
+                
+                if (animationId) {
+                    cancelAnimationFrame(animationId);
+                    animationId = null;
+                }
+                
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+            }
+        }
+        
+        function toggleTimer() {
+            if (gameState === 0) {
+                const times = [60, 90, 120, 150, 180];
+                const currentIndex = times.indexOf(gameTime);
+                const nextIndex = (currentIndex + 1) % times.length;
+                gameTime = times[nextIndex];
+                currentGameTime = gameTime;
+                updateTimerDisplay();
+            }
+        }
+        
+        function toggleDifficulty() {
+            if (gameState === 0) {
+                if (spawnInterval >= 15) {
+                    spawnInterval = 3;
+                } else {
+                    spawnInterval++;
+                }
+                updateDifficultyDisplay();
+            }
+        }
+        
+        function updateTimerDisplay() {
+            timerBtn.textContent = currentGameTime + 's';
+        }
+        
+        function updateScoreDisplay() {
+            scoreDisplay.textContent = `CORRECTO   ${correctTrains} de ${totalTrains}`;
+        }
+        
+        function updateDifficultyDisplay() {
+            difficultyBtn.textContent = spawnInterval + 's';
+        }
+        
+        function startAutoSpawn() {
+            if (!autoSpawnTimer && !gamePaused && currentGameTime > 0) {
+                autoSpawnTimer = setInterval(() => {
+                    if (!gamePaused && currentGameTime > 0) {
+                        spawnTrain();
+                    }
+                }, spawnInterval * 1000);
+                autoSpawnEnabled = true;
+            }
+        }
+        
+        function stopAutoSpawn() {
+            if (autoSpawnTimer) {
+                clearInterval(autoSpawnTimer);
+                autoSpawnTimer = null;
+                autoSpawnEnabled = false;
+            }
+        }
+        
+        function startGameTimer() {
+            if (!gameTimer && !gamePaused) {
+                gameTimer = setInterval(() => {
+                    if (!gamePaused && currentGameTime > 0) {
+                        currentGameTime--;
+                        updateTimerDisplay();
+                        
+                        if (currentGameTime <= 0) {
+                            stopAutoSpawn(); // No más trenes nuevos
+                            stopGameTimer();
+                        }
+                    }
+                }, 1000);
+            }
+        }
+        
+        function stopGameTimer() {
+            if (gameTimer) {
+                clearInterval(gameTimer);
+                gameTimer = null;
+            }
+        }
+        function spawnTrain() {
+            const destinations = gameMap.gameElements.stations.filter(s => s.id !== 'e0').map(s => s.id);
+            const randomDestination = destinations[Math.floor(Math.random() * destinations.length)];
+            
+            const train = new Train(trainIdCounter++, randomDestination);
+            trains.push(train);
+            
+            // Actualizar contador
+            totalTrains++;
+            updateScoreDisplay();
+            
+            console.log(`🚂 Tren ${train.id} creado → ${train.destination}`);
+        }
+        // Clase Train
+        class Train {
+            constructor(id, destinationStation) {
+                this.id = id;
+                this.destination = destinationStation;
+                this.color = trainColors.trainColors.colorMapping[destinationStation].color;
+                
+                const e0 = gameMap.gameElements.stations.find(s => s.id === 'e0');
+                this.x = e0.x;
+                this.y = e0.y;
+                
+                this.speed = 1; // 1 px/frame
+                this.direction = 'north';
+                this.phase = 'fixed';
+                this.state = 'moving';
+                this.radius = 8;
+                
+                // Variables para detectar dirección real
+                this.previousX = this.x;
+                this.previousY = this.y;
+                
+                this.fixedRouteStep = 0;
+                this.currentSwitch = null;
+                this.lastSwitchStatus = null;
+                this.targetPoint = null;
+                
+                console.log(`🚂 CREADO: Tren ${this.id} en (${this.x}, ${this.y}), destino: ${this.destination}`);
+            }
+            
+            update() {
+                if (this.state === 'arrived') return;
+                
+                // Guardar posición anterior para detectar dirección
+                this.previousX = this.x;
+                this.previousY = this.y;
+                
+                if (this.phase === 'fixed') {
+                    this.updateFixedPhase();
+                } else if (this.phase === 'interactive') {
+                    this.updateInteractivePhase();
+                } else if (this.phase === 'moving_to_next_c') {
+                    this.updateMovingToNextC();
+                } else if (this.phase === 'entering_c') {
+                    this.updateEnteringC();
+                } else if (this.phase === 'moving_to_station') {
+                    this.updateMovingToStation();
+                }
+                
+                // Después de moverse, detectar dirección real
+                this.updateDirection();
+            }
+            
+            updateDirection() {
+                const deltaX = this.x - this.previousX;
+                const deltaY = this.y - this.previousY;
+                
+                // Solo actualizar si realmente se movió
+                if (deltaX === 0 && deltaY === 0) return;
+                
+                if (deltaX > 0) this.direction = 'east';     // X aumenta → derecha
+                if (deltaX < 0) this.direction = 'west';     // X disminuye → izquierda
+                if (deltaY > 0) this.direction = 'south';    // Y aumenta → abajo  
+                if (deltaY < 0) this.direction = 'north';    // Y disminuye → arriba
+            }
+            
+            updateFixedPhase() {
+                const fixedRoute = gameMap.fixedRoute;
+                
+                switch (this.fixedRouteStep) {
+                    case 0:
+                        this.y -= this.speed;
+                        if (this.y <= fixedRoute.turnPoint.y) {
+                            this.y = fixedRoute.turnPoint.y;
+                            this.direction = 'west';
+                            this.fixedRouteStep = 1;
+                            console.log(`📍 Tren ${this.id} llegó al punto de giro, cambio a OESTE`);
+                        }
+                        break;
+                        
+                    case 1:
+                        this.x -= this.speed;
+                        if (this.x <= fixedRoute.firstSwitch.x) {
+                            this.x = fixedRoute.firstSwitch.x;
+                            this.fixedRouteStep = 2;
+                            console.log(`📍 Tren ${this.id} llegó a c12-D, avanzando hacia c12-C`);
+                        }
+                        break;
+                        
+                    case 2:
+                        this.x -= this.speed;
+                        if (this.x <= fixedRoute.switchCenter.x) {
+                            this.x = fixedRoute.switchCenter.x;
+                            this.y = fixedRoute.switchCenter.y;
+                            this.phase = 'interactive';
+                            this.currentSwitch = 'c12';
+                            console.log(`🎮 Tren ${this.id} llegó a c12-C, FASE INTERACTIVA iniciada`);
+                            this.startInteractivePhase();
+                        }
+                        break;
+                }
+            }
+            
+            startInteractivePhase() {
+                const switchId = this.currentSwitch;
+                const currentStatus = switchStatus[switchId];
+                this.lastSwitchStatus = currentStatus;
+                
+                this.calculateTarget(switchId, currentStatus);
+                
+                console.log(`🎯 Tren ${this.id} en ${switchId}, estado: ${currentStatus}, objetivo: ${this.targetPoint.name}`);
+            }
+            
+            calculateTarget(switchId, status) {
+                const switchEl = gameMap.gameElements.switches.find(s => s.id === switchId);
+                const switchData = switchStates[switchId];
+                
+                const currentStateIndex = switchData.currentState;
+                const trackType = switchData.states[currentStateIndex];
+                
+                const entryDirection = this.getEntryDirection(switchEl);
+                const validTrackType = this.getValidTrackType(trackType, entryDirection);
+                
+                this.targetPoint = this.getTargetPoint(switchEl, validTrackType, entryDirection);
+                
+                console.log(`🎯 Calculando objetivo: ${switchId} entrada:${entryDirection} tipo:${trackType} válido:${validTrackType} → ${this.targetPoint.name}`);
+            }
+            
+            getEntryDirection(switchEl) {
+                // Usar la dirección que ya tiene el tren (mucho más simple)
+                return this.direction;
+            }
+            
+            getValidTrackType(trackType, entryDirection) {
+                const opposites = {
+                    'north': 'south',
+                    'south': 'north', 
+                    'east': 'west',
+                    'west': 'east'
+                };
+                
+                const forbidden = opposites[entryDirection];
+                
+                let options = [];
+                
+                if (trackType === '--') {
+                    options = ['east', 'west'];
+                } else if (trackType === '|') {
+                    options = ['north', 'south'];
+                } else if (trackType === 'D-N') {
+                    options = ['east', 'north'];
+                } else if (trackType === 'D-S') {
+                    options = ['east', 'south'];
+                } else if (trackType === 'S-I') {
+                    options = ['south', 'west'];
+                } else if (trackType === 'I-N') {
+                    options = ['west', 'north'];
+                }
+                
+                const validOptions = options.filter(option => option !== forbidden);
+                
+                console.log(`🚫 Dirección: ${entryDirection}, Prohibido: ${forbidden}, Opciones: [${options}] → Válidas: [${validOptions}]`);
+                
+                if (validOptions.length === 1) {
+                    return this.directionToTrackType(validOptions[0]);
+                }
+                
+                if (validOptions.length === 2) {
+                    return trackType;
+                }
+                
+                return trackType;
+            }
+            
+            directionToTrackType(direction) {
+                switch (direction) {
+                    case 'north': return 'N-N';
+                    case 'south': return 'S-S';
+                    case 'east': return 'D-D';
+                    case 'west': return 'I-I';
+                    default: return direction;
+                }
+            }
+            
+            getTargetPoint(switchEl, trackType, entryDirection) {
+                const points = switchEl.connectionPoints;
+                
+                if (trackType === 'D-D') return { x: points.D.x, y: points.D.y, name: `${switchEl.id}-D` };
+                if (trackType === 'N-N') return { x: points.N.x, y: points.N.y, name: `${switchEl.id}-N` };
+                if (trackType === 'S-S') return { x: points.S.x, y: points.S.y, name: `${switchEl.id}-S` };
+                if (trackType === 'I-I') return { x: points.I.x, y: points.I.y, name: `${switchEl.id}-I` };
+                
+                switch (trackType) {
+                    case '--':
+                        if (entryDirection === 'east') return { x: points.I.x, y: points.I.y, name: `${switchEl.id}-I` };
+                        if (entryDirection === 'west') return { x: points.D.x, y: points.D.y, name: `${switchEl.id}-D` };
+                        return { x: points.I.x, y: points.I.y, name: `${switchEl.id}-I` };
+                        
+                    case '|':
+                        if (entryDirection === 'north') return { x: points.S.x, y: points.S.y, name: `${switchEl.id}-S` };
+                        if (entryDirection === 'south') return { x: points.N.x, y: points.N.y, name: `${switchEl.id}-N` };
+                        return { x: points.S.x, y: points.S.y, name: `${switchEl.id}-S` };
+                        
+                    case 'D-N':
+                        if (entryDirection === 'south') return { x: points.D.x, y: points.D.y, name: `${switchEl.id}-D` };
+                        if (entryDirection === 'west') return { x: points.N.x, y: points.N.y, name: `${switchEl.id}-N` };
+                        return { x: points.N.x, y: points.N.y, name: `${switchEl.id}-N` };
+                        
+                    case 'D-S':
+                        if (entryDirection === 'north') return { x: points.D.x, y: points.D.y, name: `${switchEl.id}-D` };
+                        if (entryDirection === 'west') return { x: points.S.x, y: points.S.y, name: `${switchEl.id}-S` };
+                        return { x: points.S.x, y: points.S.y, name: `${switchEl.id}-S` };
+                        
+                    case 'S-I':
+                        if (entryDirection === 'north') return { x: points.I.x, y: points.I.y, name: `${switchEl.id}-I` };
+                        if (entryDirection === 'east') return { x: points.S.x, y: points.S.y, name: `${switchEl.id}-S` };
+                        return { x: points.I.x, y: points.I.y, name: `${switchEl.id}-I` };
+                        
+                    case 'I-N':
+                        if (entryDirection === 'south') return { x: points.I.x, y: points.I.y, name: `${switchEl.id}-I` };
+                        if (entryDirection === 'east') return { x: points.N.x, y: points.N.y, name: `${switchEl.id}-N` };
+                        return { x: points.N.x, y: points.N.y, name: `${switchEl.id}-N` };
+                        
+                    default:
+                        return { x: points.I.x, y: points.I.y, name: `${switchEl.id}-I` };
+                }
+            }
+            
+            updateInteractivePhase() {
+                if (!this.targetPoint || !this.currentSwitch) return;
+                
+                const currentStatus = switchStatus[this.currentSwitch];
+                if (currentStatus !== this.lastSwitchStatus) {
+                    console.log(`🔄 CAMBIO: ${this.currentSwitch} de ${this.lastSwitchStatus} a ${currentStatus}`);
+                    this.handleSwitchChange(currentStatus);
+                    return;
+                }
+                
+                this.moveTowardsTarget();
+                
+                const distance = Math.sqrt(
+                    (this.x - this.targetPoint.x) ** 2 + 
+                    (this.y - this.targetPoint.y) ** 2
+                );
+                
+                if (distance <= this.speed) {
+                    console.log(`🚪 Tren ${this.id} salió por ${this.targetPoint.name}`);
+                    this.x = this.targetPoint.x;
+                    this.y = this.targetPoint.y;
+                    
+                    this.findNextDestination();
+                }
+            }
+            
+            handleSwitchChange(newStatus) {
+                if (!this.currentSwitch) return;
+                
+                const switchEl = gameMap.gameElements.switches.find(s => s.id === this.currentSwitch);
+                if (!switchEl) return;
+                
+                const centerX = switchEl.connectionPoints.C.x;
+                const centerY = switchEl.connectionPoints.C.y;
+                
+                // Calcular DAC (distancia al centro)
+                const dac = Math.sqrt((this.x - centerX) ** 2 + (this.y - centerY) ** 2);
+                
+                // Recalcular objetivo con nuevo estado
+                this.calculateTarget(this.currentSwitch, newStatus);
+                this.lastSwitchStatus = newStatus;
+                
+                // REPOSICIONAMIENTO DAC: Colocar en nueva ruta a misma distancia
+                if (dac > 0) {
+                    // Calcular vector unitario hacia nueva salida
+                    const targetX = this.targetPoint.x;
+                    const targetY = this.targetPoint.y;
+                    const directionX = targetX - centerX;
+                    const directionY = targetY - centerY;
+                    const distance = Math.sqrt(directionX * directionX + directionY * directionY);
+                    
+                    if (distance > 0) {
+                        // Vector unitario
+                        const unitX = directionX / distance;
+                        const unitY = directionY / distance;
+                        
+                        // Nueva posición = centro + (dac * dirección unitaria)
+                        this.x = centerX + (dac * unitX);
+                        this.y = centerY + (dac * unitY);
+                        
+                        console.log(`📐 Reposicionando tren ${this.id}: dac=${Math.round(dac)} → nueva pos (${Math.round(this.x)}, ${Math.round(this.y)})`);
+                    }
+                }
+            }
+            
+            findNextDestination() {
+                console.log(`🎯 Tren ${this.id} salió de ${this.currentSwitch}, buscando siguiente destino...`);
+                
+                const currentDirection = this.getCurrentDirection();
+                const nextC = this.findNextC(this.x, this.y, currentDirection);
+                
+                if (nextC) {
+                    console.log(`🎯 Encontrado siguiente C: ${nextC.id} en (${nextC.x}, ${nextC.y})`);
+                    
+                    const entryPoint = this.getEntryPoint(nextC, currentDirection);
+                    
+                    this.targetPoint = entryPoint;
+                    this.nextC = nextC;
+                    this.phase = 'moving_to_next_c';
+                    
+                    console.log(`🚂 Tren ${this.id} dirigiéndose a ${nextC.id}-${entryPoint.name}`);
+                } else {
+                    const nextStation = this.findNextStation(this.x, this.y, currentDirection);
+                    
+                    if (nextStation) {
+                        console.log(`🎯 Encontrada estación: ${nextStation.id} en (${nextStation.x}, ${nextStation.y})`);
+                        
+                        this.targetPoint = {
+                            x: nextStation.x,
+                            y: nextStation.y,
+                            name: `${nextStation.id}-C`
+                        };
+                        this.phase = 'moving_to_station';
+                        
+                        console.log(`🚂 Tren ${this.id} dirigiéndose a estación ${nextStation.id}`);
+                    } else {
+                        console.log(`🏁 No hay destino en dirección ${currentDirection}, tren ${this.id} termina recorrido`);
+                        this.state = 'arrived';
+                    }
+                }
+                
+                this.currentSwitch = null;
+            }
+            
+            getCurrentDirection() {
+                if (this.targetPoint.name.includes('-I')) return 'west';
+                if (this.targetPoint.name.includes('-D')) return 'east';
+                if (this.targetPoint.name.includes('-N')) return 'north';
+                if (this.targetPoint.name.includes('-S')) return 'south';
+                return this.direction;
+            }
+            
+            findNextC(trenX, trenY, direccion) {
+                let candidatos = [];
+                
+                gameMap.gameElements.switches.forEach(c => {
+                    let cumple = false;
+                    let distancia = 0;
+                    
+                    switch (direccion) {
+                        case 'west':
+                            if (c.y === trenY && c.x < trenX) {
+                                distancia = trenX - c.x;
+                                cumple = true;
+                            }
+                            break;
+                        case 'east':
+                            if (c.y === trenY && c.x > trenX) {
+                                distancia = c.x - trenX;
+                                cumple = true;
+                            }
+                            break;
+                        case 'south':
+                            if (c.x === trenX && c.y > trenY) {
+                                distancia = c.y - trenY;
+                                cumple = true;
+                            }
+                            break;
+                        case 'north':
+                            if (c.x === trenX && c.y < trenY) {
+                                distancia = trenY - c.y;
+                                cumple = true;
+                            }
+                            break;
+                    }
+                    
+                    if (cumple) {
+                        candidatos.push({c: c, distancia: distancia});
+                    }
+                });
+                
+                if (candidatos.length > 0) {
+                    candidatos.sort((a, b) => a.distancia - b.distancia);
+                    return candidatos[0].c;
+                }
+                
+                return null;
+            }
+            
+            findNextStation(trenX, trenY, direccion) {
+                let candidatos = [];
+                
+                gameMap.gameElements.stations.forEach(station => {
+                    if (station.id === 'e0') return;
+                    
+                    let cumple = false;
+                    let distancia = 0;
+                    
+                    switch (direccion) {
+                        case 'west':
+                            if (station.y === trenY && station.x < trenX) {
+                                distancia = trenX - station.x;
+                                cumple = true;
+                            }
+                            break;
+                        case 'east':
+                            if (station.y === trenY && station.x > trenX) {
+                                distancia = station.x - trenX;
+                                cumple = true;
+                            }
+                            break;
+                        case 'south':
+                            if (station.x === trenX && station.y > trenY) {
+                                distancia = station.y - trenY;
+                                cumple = true;
+                            }
+                            break;
+                        case 'north':
+                            if (station.x === trenX && station.y < trenY) {
+                                distancia = trenY - station.y;
+                                cumple = true;
+                            }
+                            break;
+                    }
+                    
+                    if (cumple) {
+                        candidatos.push({station: station, distancia: distancia});
+                    }
+                });
+                
+                if (candidatos.length > 0) {
+                    candidatos.sort((a, b) => a.distancia - b.distancia);
+                    return candidatos[0].station;
+                }
+                
+                return null;
+            }
+            
+            getEntryPoint(c, direccionTren) {
+                const points = c.connectionPoints;
+                
+                switch (direccionTren) {
+                    case 'west':
+                        return { x: points.D.x, y: points.D.y, name: `${c.id}-D` };
+                    case 'east':
+                        return { x: points.I.x, y: points.I.y, name: `${c.id}-I` };
+                    case 'south':
+                        return { x: points.N.x, y: points.N.y, name: `${c.id}-N` };
+                    case 'north':
+                        return { x: points.S.x, y: points.S.y, name: `${c.id}-S` };
+                    default:
+                        return { x: points.D.x, y: points.D.y, name: `${c.id}-D` };
+                }
+            }
+            
+            updateMovingToNextC() {
+                if (!this.targetPoint) return;
+                
+                this.moveTowardsTarget();
+                
+                const distance = Math.sqrt(
+                    (this.x - this.targetPoint.x) ** 2 + 
+                    (this.y - this.targetPoint.y) ** 2
+                );
+                
+                if (distance <= this.speed) {
+                    console.log(`📍 Tren ${this.id} llegó a ${this.targetPoint.name}`);
+                    this.x = this.targetPoint.x;
+                    this.y = this.targetPoint.y;
+                    
+                    this.currentSwitch = this.nextC.id;
+                    this.targetPoint = {
+                        x: this.nextC.connectionPoints.C.x,
+                        y: this.nextC.connectionPoints.C.y,
+                        name: `${this.nextC.id}-C`
+                    };
+                    this.phase = 'entering_c';
+                    
+                    console.log(`🎮 Tren ${this.id} entrando en ${this.currentSwitch}, dirigiéndose al centro`);
+                }
+            }
+            
+            updateEnteringC() {
+                if (!this.targetPoint || !this.currentSwitch) return;
+                
+                this.moveTowardsTarget();
+                
+                const distance = Math.sqrt(
+                    (this.x - this.targetPoint.x) ** 2 + 
+                    (this.y - this.targetPoint.y) ** 2
+                );
+                
+                if (distance <= this.speed) {
+                    console.log(`🎯 Tren ${this.id} llegó al centro de ${this.currentSwitch}`);
+                    this.x = this.targetPoint.x;
+                    this.y = this.targetPoint.y;
+                    
+                    this.phase = 'interactive';
+                    this.startInteractivePhase();
+                }
+            }
+            
+            updateMovingToStation() {
+                if (!this.targetPoint) return;
+                
+                this.moveTowardsTarget();
+                
+                const distance = Math.sqrt(
+                    (this.x - this.targetPoint.x) ** 2 + 
+                    (this.y - this.targetPoint.y) ** 2
+                );
+                
+                if (distance <= this.speed) {
+                    const stationId = this.targetPoint.name.replace('-C', '');
+                    console.log(`🏁 Tren ${this.id} llegó a estación ${stationId}`);
+                    this.x = this.targetPoint.x;
+                    this.y = this.targetPoint.y;
+                    this.state = 'arrived';
+                    
+                    if (stationId === this.destination) {
+                        console.log(`✅ ¡Tren ${this.id} llegó CORRECTAMENTE a ${this.destination}!`);
+                        correctTrains++;
+                        updateScoreDisplay();
+                    } else {
+                        console.log(`❌ ¡Tren ${this.id} llegó INCORRECTAMENTE a ${stationId}, debía ir a ${this.destination}!`);
+                    }
+                }
+            }
+            
+            moveTowardsTarget() {
+                const dx = this.targetPoint.x - this.x;
+                const dy = this.targetPoint.y - this.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                
+                if (distance > 0) {
+                    this.x += (dx / distance) * this.speed;
+                    this.y += (dy / distance) * this.speed;
+                }
+            }
+            
+            draw(ctx) {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, 2 * Math.PI);
+                ctx.fillStyle = this.color;
+                ctx.fill();
+                
+                ctx.strokeStyle = 'white';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                
+                ctx.fillStyle = 'white';
+                ctx.font = 'bold 10px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                
+                const text = this.destination;
+                const textWidth = ctx.measureText(text).width;
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+                ctx.fillRect(this.x - textWidth/2 - 2, this.y - 15, textWidth + 4, 12);
+                
+                ctx.fillStyle = 'white';
+                ctx.fillText(text, this.x, this.y - 9);
+            }
+        }
+        
+        function showLoading(show, text = '') {
+            loadingOverlay.style.display = show ? 'flex' : 'none';
+            if (text) loadingText.textContent = text;
+        }
+        
+        async function loadJSON(filename) {
+            try {
+                const response = await fetch(filename);
+                if (!response.ok) {
+                    throw new Error(`Error al cargar ${filename}: ${response.status}`);
+                }
+                return await response.json();
+            } catch (error) {
+                console.error(`Error cargando ${filename}:`, error);
+                throw error;
+            }
+        }
+        
+        async function loadGameData() {
+            showLoading(true, 'Cargando iconos de vías...');
+            trackIcons = await loadJSON('track-icons.json');
+            
+            showLoading(true, 'Cargando combinaciones de switches...');
+            switchCombinations = await loadJSON('switch-combinations.json');
+            
+            showLoading(true, 'Cargando mapa del juego...');
+            gameMap = await loadJSON('game-map.json');
+            
+            showLoading(true, 'Cargando configuración...');
+            gameConfig = await loadJSON('game-config.json');
+            
+            showLoading(true, 'Cargando colores de trenes...');
+            trainColors = await loadJSON('train-colors.json');
+            
+            showLoading(true, 'Procesando datos...');
+            initializeSwitchStates();
+            
+            showLoading(false);
+        }
+        
+        function initializeSwitchStates() {
+            switchStatus = {};
+            switchStates = {};
+            const mapping = switchCombinations.switchCombinations;
+            const switchMapping = switchCombinations.switchMapping;
+            
+            Object.keys(switchMapping).forEach(switchId => {
+                const combinationType = switchMapping[switchId];
+                const combination = mapping[combinationType];
+                
+                switchStates[switchId] = {
+                    states: combination.states,
+                    currentState: 0,
+                    combinationType: combinationType
+                };
+                
+                switchStatus[switchId] = combinationType;
+            });
+            
+            console.log('🎛️ Estados iniciales:', switchStatus);
+            console.log('🔧 Switch states:', switchStates);
+        }
+        
+        async function loadGameImage() {
+            return new Promise((resolve) => {
+                const img = new Image();
+                img.onload = function() {
+                    gameImage = img;
+                    resolve(true);
+                };
+                img.onerror = function() {
+                    createFallbackBackground();
+                    resolve(false);
+                };
+                
+                img.src = gameMap.mapInfo.backgroundImage;
+                
+                setTimeout(() => {
+                    if (!gameImage) {
+                        createFallbackBackground();
+                        resolve(false);
+                    }
+                }, 2000);
+            });
+        }
+        
+        function createFallbackBackground() {
+            ctx.fillStyle = '#4a7c59';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            ctx.fillStyle = '#5a8c69';
+            for(let i = 0; i < canvas.width; i += 150) {
+                for(let j = 0; j < canvas.height; j += 150) {
+                    ctx.beginPath();
+                    ctx.arc(i + 75, j + 75, 50, 0, 2 * Math.PI);
+                    ctx.fill();
+                }
+            }
+            
+            ctx.fillStyle = 'rgba(0,0,0,0.7)';
+            ctx.fillRect(canvas.width/2 - 200, 50, 400, 80);
+            ctx.fillStyle = 'white';
+            ctx.font = '16px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('Imagen no encontrada - Usando fondo simulado', canvas.width/2, 80);
+            ctx.fillText(`Coloca ${gameMap.mapInfo.backgroundImage} en la misma carpeta`, canvas.width/2, 105);
+        }
+        
+        function drawGame() {
+            if (!gameActive) return;
+            
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            if (gameImage) {
+                ctx.drawImage(gameImage, 0, 0, canvas.width, canvas.height);
+            }
+            
+            gameMap.gameElements.stations.forEach(station => {
+                drawStation(station);
+            });
+            
+            gameMap.gameElements.switches.forEach(switchEl => {
+                drawSwitch(switchEl);
+            });
+            
+            trains.forEach(train => {
+                train.draw(ctx);
+            });
+            
+            // Dibujar información de debug (OCULTA)
+            if (false && trains.length > 0) { // Cambiado a false para ocultar
+                drawTrainDebugInfo();
+            }
+        }
+        
+        function drawTrainDebugInfo() {
+            const maxTrainsToShow = 5;
+            const trainsToShow = trains.slice(0, maxTrainsToShow);
+            
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+            ctx.fillRect(10, 10, 400, trainsToShow.length * 80 + 40);
+            
+            ctx.fillStyle = 'white';
+            ctx.font = '12px Arial';
+            ctx.textAlign = 'left';
+            
+            ctx.fillText(`🚂 Trenes activos: ${trains.length} (mostrando ${trainsToShow.length})`, 20, 30);
+            
+            trainsToShow.forEach((train, index) => {
+                const y = 50 + index * 80;
+                ctx.fillText(`Tren ${train.id}: → ${train.destination}`, 20, y);
+                ctx.fillText(`Pos: (${Math.round(train.x)}, ${Math.round(train.y)})`, 20, y + 15);
+                ctx.fillText(`Fase: ${train.phase}, Estado: ${train.state}`, 20, y + 30);
+                ctx.fillText(`Dirección: ${train.direction}`, 20, y + 45);
+                if (train.phase === 'moving_to_next_c') {
+                    ctx.fillText(`Dirigiéndose a: ${train.targetPoint.name}`, 20, y + 60);
+                } else if (train.phase === 'entering_c') {
+                    ctx.fillText(`Entrando a: ${train.targetPoint.name}`, 20, y + 60);
+                } else if (train.phase === 'moving_to_station') {
+                    ctx.fillText(`Hacia estación: ${train.targetPoint.name}`, 20, y + 60);
+                } else if (train.currentSwitch) {
+                    ctx.fillText(`Switch: ${train.currentSwitch} (${switchStates[train.currentSwitch].currentState})`, 20, y + 60);
+                }
+            });
+            
+            if (autoSpawnEnabled) {
+                ctx.fillStyle = 'lime';
+                ctx.fillText('AUTO SPAWN: ON (cada 5s)', 20, trainsToShow.length * 80 + 70);
+            }
+        }
+        
+        function drawStation(station) {
+            const radius = gameMap.gameSettings.elementSizes.stationRadius;
+            let color = 'rgba(255, 0, 0, 0.6)';
+            
+            if (station.id === 'e0') {
+                color = 'rgba(255, 215, 0, 0.8)';
+            }
+            
+            ctx.beginPath();
+            ctx.arc(station.x, station.y, radius, 0, 2 * Math.PI);
+            ctx.fillStyle = color;
+            ctx.fill();
+            
+            ctx.strokeStyle = station.id === 'e0' ? 'red' : 'rgba(255, 255, 255, 0.8)';
+            ctx.lineWidth = station.id === 'e0' ? 3 : 2;
+            ctx.stroke();
+            
+            if (gameConfig.gameConfig.visual.showLabels) {
+                ctx.fillStyle = 'white';
+                ctx.font = 'bold 14px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                
+                const textWidth = ctx.measureText(station.id).width;
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+                ctx.fillRect(station.x - textWidth/2 - 4, station.y - 8, textWidth + 8, 16);
+                
+                ctx.fillStyle = 'white';
+                ctx.fillText(station.id, station.x, station.y);
+            }
+        }
+        
+        function drawSwitch(switchEl) {
+            const radius = gameMap.gameSettings.elementSizes.switchRadius;
+            const currentStateIndex = switchStates[switchEl.id].currentState;
+            const currentTrackType = switchStates[switchEl.id].states[currentStateIndex];
+            const trackData = trackIcons.trackIcons[currentTrackType];
+            
+            ctx.beginPath();
+            ctx.arc(switchEl.x, switchEl.y, radius, 0, 2 * Math.PI);
+            ctx.fillStyle = 'rgba(0, 100, 255, 0.8)';
+            ctx.fill();
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
+            ctx.lineWidth = 3;
+            ctx.stroke();
+            
+            if (trackData) {
+                ctx.save();
+                ctx.translate(switchEl.x - 80, switchEl.y - 80);
+                
+                const path = new Path2D(trackData.path);
+                ctx.strokeStyle = trackIcons.styling.trackColor;
+                ctx.lineWidth = trackIcons.styling.strokeWidth;
+                ctx.lineCap = trackIcons.styling.strokeLinecap;
+                ctx.stroke(path);
+                
+                ctx.restore();
+            }
+            
+            if (gameConfig.gameConfig.visual.showLabels) {
+                ctx.fillStyle = 'white';
+                ctx.font = 'bold 16px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                
+                const textWidth = ctx.measureText(switchEl.id).width;
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+                ctx.fillRect(switchEl.x - textWidth/2 - 6, switchEl.y - 10, textWidth + 12, 20);
+                
+                ctx.fillStyle = 'white';
+                ctx.fillText(switchEl.id, switchEl.x, switchEl.y);
+            }
+        }
+        
+        async function initializeGame() {
+            try {
+                await loadGameData();
+                await loadGameImage();
+                
+                gameActive = true;
+                drawGame();
+                
+                canvas.addEventListener('click', handleCanvasClick);
+                animationId = requestAnimationFrame(gameLoop);
+                
+                return true;
+            } catch (error) {
+                console.error('Error inicializando juego:', error);
+                return false;
+            }
+        }
+        
+        // function stopGame() eliminada - ahora usamos reset
+        
+        function handleCanvasClick(event) {
+            if (!gameActive) return;
+            
+            const rect = canvas.getBoundingClientRect();
+            const x = event.clientX - rect.left;
+            const y = event.clientY - rect.top;
+            
+            gameMap.gameElements.switches.forEach(switchEl => {
+                const distance = Math.sqrt((x - switchEl.x) ** 2 + (y - switchEl.y) ** 2);
+                if (distance <= gameMap.gameSettings.elementSizes.switchRadius) {
+                    toggleSwitch(switchEl.id);
+                }
+            });
+        }
+        
+        function toggleSwitch(switchId) {
+            const switchData = switchStates[switchId];
+            switchData.currentState = switchData.currentState === 0 ? 1 : 0;
+            
+            const currentTrackType = switchData.states[switchData.currentState];
+            const trackName = trackIcons.trackIcons[currentTrackType].name;
+            
+            console.log(`🔄 ${switchId} cambió a estado ${switchData.currentState}: ${trackName}`);
+            
+            trains.forEach(train => {
+                if (train.currentSwitch === switchId) {
+                    console.log(`🔄 Forzando recálculo para tren ${train.id} en ${switchId}`);
+                    train.lastSwitchStatus = null;
+                }
+            });
+            
+            // drawGame();
+            // updateSwitchInfo(); ← Función eliminada
+            drawGame();
+        }
+        
+        
+        // function updateSwitchInfo() eliminada - ya no hay panel de info
+    </script>
+</body>
+</html>
